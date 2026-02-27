@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>W:3 — Авторизация</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+
+:root{
+  --bg:#060608;
+  --surface:#0e0e12;
+  --surface2:#16161c;
+  --accent:#ff6600;
+  --accent2:#ff9944;
+  --text:#f0ede8;
+  --text-muted:#5a5760;
+  --border:#1e1e26;
+  --glow:rgba(255,102,0,.18);
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Space Mono',monospace;
+  min-height:100dvh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  position:relative;
+  overflow-x:hidden;
+}
+
+/* === ФОНОВАЯ СЕТКА === */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(255,102,0,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,102,0,.04) 1px, transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;
+  z-index:0;
+}
+body::after{
+  content:'';
+  position:fixed;
+  top:-40%;left:-20%;
+  width:70%;height:70%;
+  background:radial-gradient(circle, rgba(255,102,0,.07) 0%, transparent 65%);
+  pointer-events:none;z-index:0;
+  animation:drift 12s ease-in-out infinite alternate;
+}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(8%,5%)}}
+
+/* === КОНТЕЙНЕР === */
+.wrap{
+  width:100%;max-width:400px;
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;gap:0;
+}
+
+/* === ЛОГО === */
+.logo{
+  text-align:center;
+  margin-bottom:36px;
+  animation:fadeUp .5s ease both;
+}
+.logo-mark{
+  font-family:'Syne',sans-serif;
+  font-size:3.2rem;font-weight:800;
+  color:var(--accent);
+  letter-spacing:-.02em;
+  line-height:1;
+  position:relative;display:inline-block;
+}
+.logo-mark::after{
+  content:'';
+  position:absolute;bottom:-6px;left:0;right:0;
+  height:2px;background:var(--accent);
+  box-shadow:0 0 12px var(--accent);
+  animation:lineGrow .6s .3s ease both;
+  transform-origin:left;
+}
+@keyframes lineGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.logo-sub{
+  font-size:.72rem;color:var(--text-muted);letter-spacing:.25em;
+  margin-top:12px;text-transform:uppercase;
+}
+
+/* === КАРТОЧКА === */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:28px 24px;
+  display:flex;flex-direction:column;gap:14px;
+  animation:fadeUp .5s .1s ease both;
+  position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,102,0,.4),transparent);
+}
+
+/* === ТАБЫ === */
+.tabs{
+  display:flex;background:var(--surface2);border-radius:10px;overflow:hidden;
+  border:1px solid var(--border);
+}
+.tab-btn{
+  flex:1;background:none;border:none;color:var(--text-muted);
+  font-family:'Space Mono',monospace;font-size:.78rem;font-weight:700;
+  letter-spacing:.08em;padding:11px 8px;cursor:pointer;
+  transition:color .2s,background .2s;
+}
+.tab-btn.active{background:var(--accent);color:#fff;}
+.tab-btn:active{opacity:.8;}
+
+/* === ПОЛЯ === */
+.field{display:flex;flex-direction:column;gap:5px;}
+.field-label{font-size:.7rem;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;}
+.field-note{font-size:.68rem;color:var(--text-muted);margin-top:2px;}
+input{
+  width:100%;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  color:var(--text);
+  font-family:'Space Mono',monospace;
+  font-size:.9rem;
+  padding:12px 14px;
+  outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--glow);
+}
+input::placeholder{color:var(--text-muted);}
+
+/* === КНОПКА === */
+.btn{
+  width:100%;
+  background:var(--accent);
+  color:#fff;border:none;
+  border-radius:10px;
+  font-family:'Space Mono',monospace;
+  font-size:.88rem;font-weight:700;
+  letter-spacing:.08em;
+  padding:14px;
+  cursor:pointer;
+  transition:opacity .15s,transform .1s,box-shadow .2s;
+  position:relative;overflow:hidden;
+  margin-top:2px;
+}
+.btn::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.12),transparent);
+  pointer-events:none;
+}
+.btn:hover{box-shadow:0 4px 20px rgba(255,102,0,.35);}
+.btn:active{transform:scale(.97);opacity:.88;}
+.btn.sec{background:var(--surface2);color:var(--text);}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+
+/* === СООБЩЕНИЯ === */
+.msg{
+  font-size:.78rem;text-align:center;min-height:18px;
+  padding:0 4px;letter-spacing:.02em;
+}
+.msg.err{color:#ff4444;}
+.msg.ok{color:#4caf50;}
+
+/* === РЕЗУЛЬТАТ ТОКЕНА === */
+.token-result{
+  display:none;flex-direction:column;gap:14px;
+  animation:fadeUp .3s ease both;
+}
+.token-box{
+  background:var(--surface2);
+  border:1px dashed var(--accent);
+  border-radius:12px;
+  padding:16px;
+  text-align:center;
+}
+.token-label{font-size:.68rem;color:var(--text-muted);letter-spacing:.12em;margin-bottom:8px;}
+.token-value{
+  font-size:.82rem;color:var(--accent);
+  word-break:break-all;line-height:1.7;
+  font-weight:700;
+}
+.token-warn{
+  font-size:.75rem;color:var(--text-muted);
+  background:rgba(255,165,0,.08);border:1px solid rgba(255,165,0,.2);
+  border-radius:8px;padding:10px 12px;line-height:1.6;text-align:center;
+}
+.token-warn b{color:var(--accent2);}
+
+/* === FOOTER === */
+.footer{
+  text-align:center;
+  margin-top:22px;
+  font-size:.68rem;color:var(--text-muted);
+  letter-spacing:.08em;
+  animation:fadeUp .5s .25s ease both;
+  line-height:1.8;
+}
+.footer a{color:var(--accent);text-decoration:none;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* === SPINNER === */
+.spinner{
+  width:18px;height:18px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;
+  animation:spin .7s linear infinite;
+  display:inline-block;vertical-align:middle;margin-right:6px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* === ИНФО БЛОК === */
+.info-block{
+  background:var(--surface2);border-radius:12px;padding:14px 16px;
+  border-left:3px solid var(--accent);font-size:.78rem;
+  color:var(--text-muted);line-height:1.7;
+}
+.info-block b{color:var(--text);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="logo">
+    <div class="logo-mark">W:3</div>
+    <div class="logo-sub">Система авторизации</div>
+  </div>
+
+  <div class="card" id="mainCard">
+
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-reg" onclick="switchTab('reg')">РЕГИСТРАЦИЯ</button>
+      <button class="tab-btn" id="tab-login" onclick="switchTab('login')">ВХОД</button>
+    </div>
+
+    <!-- РЕГИСТРАЦИЯ -->
+    <div id="section-reg" style="display:flex;flex-direction:column;gap:14px;">
+      <div class="field">
+        <div class="field-label">Имя пользователя *</div>
+        <input id="regName" type="text" placeholder="username" autocorrect="off" autocapitalize="off"
+          onkeydown="if(event.key==='Enter')document.getElementById('regPass').focus()">
+      </div>
+      <div class="field">
+        <div class="field-label">Пароль *</div>
+        <input id="regPass" type="password" placeholder="••••••••"
+          onkeydown="if(event.key==='Enter')document.getElementById('regPhone').focus()">
+      </div>
+      <div class="field">
+        <div class="field-label">Номер телефона <span style="color:var(--text-muted);font-size:.65rem;">необязательно</span></div>
+        <input id="regPhone" type="tel" placeholder="+7 999 123-45-67"
+          onkeydown="if(event.key==='Enter')document.getElementById('regEmail').focus()">
+      </div>
+      <div class="field">
+        <div class="field-label">E-mail <span style="color:var(--text-muted);font-size:.65rem;">необязательно</span></div>
+        <input id="regEmail" type="email" placeholder="you@example.com"
+          onkeydown="if(event.key==='Enter')doRegister()">
+      </div>
+      <div class="msg" id="regMsg"></div>
+      <button class="btn" id="regBtn" onclick="doRegister()">СОЗДАТЬ АККАУНТ W:3</button>
+      <div class="info-block">
+        После регистрации вы получите <b>токен W:3</b> — уникальный ключ для входа в сервисы.<br>
+        <b>Сохраните его надёжно!</b>
+      </div>
+    </div>
+
+    <!-- РЕЗУЛЬТАТ ТОКЕНА -->
+    <div class="token-result" id="tokenResult">
+      <div class="token-box">
+        <div class="token-label">ВАШ ТОКЕН W:3</div>
+        <div class="token-value" id="tokenValue"></div>
+      </div>
+      <div class="token-warn">
+        ⚠️ <b>Сохрани токен прямо сейчас!</b><br>
+        Он показывается только один раз.<br>
+        Используй его для входа в мессенджер «Доверие».
+      </div>
+      <button class="btn" onclick="copyToken()">📋 СКОПИРОВАТЬ ТОКЕН</button>
+      <button class="btn sec" onclick="resetForm()">← НАЗАД</button>
+    </div>
+
+    <!-- ВХОД -->
+    <div id="section-login" style="display:none;flex-direction:column;gap:14px;">
+      <div class="field">
+        <div class="field-label">Имя пользователя</div>
+        <input id="loginName" type="text" placeholder="username" autocorrect="off" autocapitalize="off"
+          onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+      </div>
+      <div class="field">
+        <div class="field-label">Пароль</div>
+        <input id="loginPass" type="password" placeholder="••••••••"
+          onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="msg" id="loginMsg"></div>
+      <button class="btn" id="loginBtn" onclick="doLogin()">ПОЛУЧИТЬ ТОКЕН</button>
+    </div>
+
+    <!-- РЕЗУЛЬТАТ ВХОДА -->
+    <div class="token-result" id="loginResult">
+      <div class="token-box">
+        <div class="token-label">ВАШ ТОКЕН W:3</div>
+        <div class="token-value" id="loginTokenValue"></div>
+      </div>
+      <div class="token-warn">
+        Используй этот токен для входа в мессенджер «Доверие» и другие сервисы W:3.
+      </div>
+      <button class="btn" onclick="copyLoginToken()">📋 СКОПИРОВАТЬ ТОКЕН</button>
+      <button class="btn sec" onclick="resetLoginForm()">← НАЗАД</button>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    W:3 — единая система авторизации<br>
+    <span style="opacity:.5;">Токен действителен во всех сервисах W:3</span>
+  </div>
+
+</div>
+
+<script>
+// ======= CONFIG =======
+// Замени на URL своего мессенджера на Render!
+const MESSENGER_URL = 'https://doverie.onrender.com';
+const W3_SECRET = 'W3_SECRET_2026';
+
+// ======= TABS =======
+let currentTab = 'reg';
+function switchTab(t) {
+  currentTab = t;
+  document.getElementById('tab-reg').classList.toggle('active', t === 'reg');
+  document.getElementById('tab-login').classList.toggle('active', t === 'login');
+  document.getElementById('section-reg').style.display = t === 'reg' ? 'flex' : 'none';
+  document.getElementById('section-login').style.display = t === 'login' ? 'flex' : 'none';
+  document.getElementById('tokenResult').style.display = 'none';
+  document.getElementById('loginResult').style.display = 'none';
+}
+
+// ======= REGISTER =======
+async function doRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const pass = document.getElementById('regPass').value;
+  const phone = document.getElementById('regPhone').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const msg = document.getElementById('regMsg');
+  const btn = document.getElementById('regBtn');
+
+  if (!name) { msg.textContent = 'Введи имя'; msg.className = 'msg err'; return; }
+  if (name.length < 2) { msg.textContent = 'Имя минимум 2 символа'; msg.className = 'msg err'; return; }
+  if (!/^[a-zA-Zа-яА-ЯёЁ0-9_]+$/.test(name)) { msg.textContent = 'Только буквы, цифры и _'; msg.className = 'msg err'; return; }
+  if (!pass || pass.length < 4) { msg.textContent = 'Пароль минимум 4 символа'; msg.className = 'msg err'; return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>СОЗДАЁМ...';
+  msg.textContent = '';
+
+  try {
+    const r = await fetch('/api/w3/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: name, password: pass, phone, email, secret: W3_SECRET })
+    });
+    const data = await r.json();
+
+    if (data.success) {
+      // Показываем токен
+      document.getElementById('section-reg').style.display = 'none';
+      const result = document.getElementById('tokenResult');
+      document.getElementById('tokenValue').textContent = data.token;
+      result.style.display = 'flex';
+      currentToken = data.token;
+    } else {
+      msg.textContent = data.error === 'taken' ? 'Это имя уже занято' : (data.error || 'Ошибка регистрации');
+      msg.className = 'msg err';
+    }
+  } catch(e) {
+    msg.textContent = 'Нет связи с сервером';
+    msg.className = 'msg err';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'СОЗДАТЬ АККАУНТ W:3';
+}
+
+// ======= LOGIN =======
+async function doLogin() {
+  const name = document.getElementById('loginName').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const msg = document.getElementById('loginMsg');
+  const btn = document.getElementById('loginBtn');
+
+  if (!name || !pass) { msg.textContent = 'Заполни все поля'; msg.className = 'msg err'; return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>ПРОВЕРЯЕМ...';
+  msg.textContent = '';
+
+  try {
+    const r = await fetch('/api/w3/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: name, password: pass })
+    });
+    const data = await r.json();
+
+    if (data.success) {
+      document.getElementById('section-login').style.display = 'none';
+      const result = document.getElementById('loginResult');
+      document.getElementById('loginTokenValue').textContent = data.token;
+      result.style.display = 'flex';
+      currentLoginToken = data.token;
+    } else {
+      msg.textContent = data.error === 'not_found' ? 'Пользователь не найден' : 'Неверное имя или пароль';
+      msg.className = 'msg err';
+    }
+  } catch(e) {
+    msg.textContent = 'Нет связи с сервером';
+    msg.className = 'msg err';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'ПОЛУЧИТЬ ТОКЕН';
+}
+
+// ======= COPY =======
+let currentToken = '';
+let currentLoginToken = '';
+
+function copyToken() {
+  navigator.clipboard.writeText(currentToken)
+    .then(() => {
+      const btn = document.querySelector('#tokenResult .btn');
+      btn.textContent = '✓ СКОПИРОВАНО!';
+      setTimeout(() => btn.textContent = '📋 СКОПИРОВАТЬ ТОКЕН', 2000);
+    })
+    .catch(() => {
+      // Фоллбэк для мобильных
+      const el = document.createElement('textarea');
+      el.value = currentToken;
+      document.body.appendChild(el);
+      el.select(); document.execCommand('copy');
+      el.remove();
+      alert('Токен скопирован:\n' + currentToken);
+    });
+}
+
+function copyLoginToken() {
+  navigator.clipboard.writeText(currentLoginToken)
+    .then(() => {
+      const btn = document.querySelector('#loginResult .btn');
+      btn.textContent = '✓ СКОПИРОВАНО!';
+      setTimeout(() => btn.textContent = '📋 СКОПИРОВАТЬ ТОКЕН', 2000);
+    })
+    .catch(() => {
+      const el = document.createElement('textarea');
+      el.value = currentLoginToken;
+      document.body.appendChild(el);
+      el.select(); document.execCommand('copy');
+      el.remove();
+      alert('Токен скопирован:\n' + currentLoginToken);
+    });
+}
+
+// ======= RESET =======
+function resetForm() {
+  document.getElementById('tokenResult').style.display = 'none';
+  document.getElementById('section-reg').style.display = 'flex';
+  document.getElementById('regName').value = '';
+  document.getElementById('regPass').value = '';
+  document.getElementById('regPhone').value = '';
+  document.getElementById('regEmail').value = '';
+  document.getElementById('regMsg').textContent = '';
+  currentToken = '';
+}
+
+function resetLoginForm() {
+  document.getElementById('loginResult').style.display = 'none';
+  document.getElementById('section-login').style.display = 'flex';
+  document.getElementById('loginName').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginMsg').textContent = '';
+  currentLoginToken = '';
+}
+</script>
+</body>
+</html>
